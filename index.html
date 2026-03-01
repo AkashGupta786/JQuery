@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS & jQuery Form Validation</title>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        /* 1. Page Layout & Centering */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center; /* Horizontal Center */
+            align-items: center;     /* Vertical Center */
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .form-container {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #222;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 2. Dark Colored Message Boxes */
+        .alert-box {
+            display: none;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        /* Dark Red Error Box */
+        .error-style {
+            background-color: #8b0000; 
+            color: #ffffff;
+            border: 2px solid #5a0000;
+        }
+
+        /* Dark Green Success Box */
+        .success-style {
+            background-color: #006400; 
+            color: #ffffff;
+            border: 2px solid #004200;
+        }
+
+        /* 3. Input Styling */
+        .field-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: border 0.3s;
+        }
+
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        /* Password Wrapper for Toggle Button */
+        .password-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        #toggleBtn {
+            cursor: pointer;
+            background: #e9ecef;
+            border: 1px solid #ccc;
+            padding: 0 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            background-color: #222;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #444;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <h2>Registration</h2>
+
+        <div id="error-alert" class="alert-box error-style"></div>
+        <div id="success-alert" class="alert-box success-style">Registration Successful!</div>
+
+        <form id="registrationForm">
+            <div class="field-group">
+                <label>Email Address</label>
+                <input type="text" id="email" placeholder="e.g. user@example.com">
+            </div>
+
+            <div class="field-group">
+                <label>Phone Number</label>
+                <input type="text" id="phone" placeholder="10-digit mobile number">
+            </div>
+
+            <div class="field-group">
+                <label>Password</label>
+                <div class="password-row">
+                    <input type="password" id="password" placeholder="Create a password">
+                    <button type="button" id="toggleBtn">Show</button>
+                </div>
+                <small style="color: #666; font-size: 11px; display: block; margin-top: 5px;">
+                    Requirement: 8+ chars, 1 Uppercase, 1 Number.
+                </small>
+            </div>
+
+            <button type="submit">Submit Now</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+
+            // 1. Password Show/Hide Toggle
+            $('#toggleBtn').on('click', function() {
+                const passInput = $('#password');
+                const isPass = passInput.attr('type') === 'password';
+                
+                passInput.attr('type', isPass ? 'text' : 'password');
+                $(this).text(isPass ? 'Hide' : 'Show');
+            });
+
+            // 2. Main Validation Logic
+            $('#registrationForm').on('submit', function(e) {
+                e.preventDefault(); // Prevent page reload
+
+                // Reset message states
+                $('#error-alert').hide().text('');
+                $('#success-alert').hide();
+
+                // Get values
+                const emailVal = $('#email').val().trim();
+                const phoneVal = $('#phone').val().trim();
+                const passVal = $('#password').val();
+
+                let errorList = [];
+
+                // Check for Empty Fields
+                if (!emailVal || !phoneVal || !passVal) {
+                    errorList.push("Error: All fields are required.");
+                }
+
+                // Email Regex Check
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (emailVal && !emailRegex.test(emailVal)) {
+                    errorList.push("Error: Please enter a valid email address.");
+                }
+
+                // Phone Check (Exactly 10 digits)
+                if (phoneVal && (phoneVal.length !== 10 || isNaN(phoneVal))) {
+                    errorList.push("Error: Phone number must be 10 digits only.");
+                }
+
+                // Password Check (Min 8, 1 Uppercase, 1 Number)
+                const passRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+                if (passVal && !passRegex.test(passVal)) {
+                    errorList.push("Error: Password needs 8+ chars, 1 Uppercase & 1 Number.");
+                }
+
+                // Final Output
+                if (errorList.length > 0) {
+                    // Show Dark Red Error Box
+                    $('#error-alert').html(errorList.join('<br>')).fadeIn();
+                } else {
+                    // Show Dark Green Success Box
+                    $('#success-alert').fadeIn();
+                    $('#registrationForm')[0].reset(); // Clear form inputs
+                    $('#toggleBtn').text('Show');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
